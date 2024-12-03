@@ -19,97 +19,147 @@ func main() {
 	commands := []*discordgo.ApplicationCommand{
 		{
 			Name:        "start",
-            Description: "Starts a specific process based on project directory and starting command",
+			Description: "Starts a specific process based on project directory and starting command",
 			Options: []*discordgo.ApplicationCommandOption{
 				{
-					Name: "directory",
+					Name:        "directory",
 					Description: "Working directory from where you can start your project",
 					Type:        discordgo.ApplicationCommandOptionString,
 					Required:    true,
 				},
 				{
 					Name:        "command",
-                    Description: "Command to start your project",
-                    Type:        discordgo.ApplicationCommandOptionString,
-                    Required:    true,
+					Description: "Command to start your project",
+					Type:        discordgo.ApplicationCommandOptionString,
+					Required:    true,
 				},
-			
+				{
+					Name:        "personal_code",
+					Description: "Code used for quick authentication only shown in DM",
+					Type:        discordgo.ApplicationCommandOptionString,  // Added Type
+				},
 			},
 		},
 		{
 			Name:        "stop",
-            Description: "Stops a specific process based on project directory and stopping command",
-            Options: []*discordgo.ApplicationCommandOption{
-                {
-                    Name: "pid",
-                    Description: "id of the process to stop",
-                    Type:        discordgo.ApplicationCommandOptionString,
-                    Required:    true,
-                },
-            
-            },
+			Description: "Stops a specific process based on project directory and stopping command",
+			Options: []*discordgo.ApplicationCommandOption{
+				{
+					Name:        "process_name",  // Changed the name to follow the proper naming convention
+					Description: "Name of the process to stop",
+					Type:        discordgo.ApplicationCommandOptionString,
+					Required:    true,
+				},
+				{
+					Name:        "auth_code",
+					Description: "Uuid based code used for quick authentication only shown in DM",
+					Type:        discordgo.ApplicationCommandOptionString,
+					Required: true,  // Added Type
+				},
+				{
+					Name:        "workspace_name",
+					Description: "The workspace where the process exists(neccesary for auth)",
+					Type:        discordgo.ApplicationCommandOptionString,  // Added Type
+					Required:    true,
+				},
+			},
+		},
+		{
+			Name:        "restart",
+			Description: "Restarts a specific process",
+			Options: []*discordgo.ApplicationCommandOption{
+				{
+					Name:        "process_name",  // Changed the name to follow the proper naming convention
+					Description: "Name of the process to restart",
+					Type:        discordgo.ApplicationCommandOptionString,
+					Required:    true,
+				},
+				{
+					Name:        "personal_code",
+					Description: "Code used for quick authentication only shown in DM",
+					Type:        discordgo.ApplicationCommandOptionString,  // Added Type
+					Required:    true,
+				},
+				{
+					Name:        "workspace_name",
+					Description: "The workspace where the process exists(neccesary for auth)",
+					Type:        discordgo.ApplicationCommandOptionString,  // Added Type
+					Required:    true,
+				},
+			},
 		},
 		{
 			Name:        "list",
-            Description: "Lists all running processes",
-            
+			Description: "Lists all running processes",
 		},
 		{
 			Name:        "auth",
-            Description: "Authenticates a user in order to asign a workspace",
-           
+			Description: "Authenticates a user to access a workspace",
+			Options: []*discordgo.ApplicationCommandOption{
+				{
+					Name:        "workspace",  // Changed the name to lowercase
+					Description: "A workspace to which the user gains access",
+					Type:        discordgo.ApplicationCommandOptionString,
+					Required:    true,
+				},
+				{
+					Name:        "user",  // Changed the name to lowercase
+					Description: "The user to be authenticated",
+					Type:        discordgo.ApplicationCommandOptionUser,
+					Required:    true,
+				},
+			},
 		},
 		{
 			Name:        "workspaces",
-            Description: "curent existing workspaces",
-           
+			Description: "Current existing workspaces",
 		},
 		{
-			Name:        "first_time_start",
-            Description: "Configures the active directory for projects as well as permissions",
+			Name:        "workspace_create",
+			Description: "Creates a new workspace",
 			Options: []*discordgo.ApplicationCommandOption{
-                {
-                    Name: "path",
-                    Description: "where your active directory would be",
-                    Type:        discordgo.ApplicationCommandOptionString,
-                    Required:    true,
-
-                },
 				{
-					Name:        "permited_users",
-                    Description: "Users who have access to processual managment ",
-                    Type:        discordgo.ApplicationCommandOptionString,
-                    Required:    true,
+					Name:        "name",
+					Description: "Where your active directory would be",
+					Type:        discordgo.ApplicationCommandOptionString,
+					Required:    true,
 				},
 				{
-					Name:        "owner",
-                    Description: "The workspace owner",
-                    Type:        discordgo.ApplicationCommandOptionUser,
-                    Required:    true,
-				},
-				{
-					Name:        "token",
-                    Description: "Your personal github access token used to fetch repositories as well as grant push pull access",
-                    Type:        discordgo.ApplicationCommandOptionString,
-                    Required:    true,
+					Name:        "permitted_users",  // Fixed the typo in 'permitted'
+					Description: "Users who have access to process management",
+					Type:        discordgo.ApplicationCommandOptionUser,
+					Required:    true,
 				},
 				
-            
-            
-            },
+				{
+					Name:        "owner_token",
+					Description: "Your personal GitHub access token used to fetch repositories and grant push/pull access",
+					Type:        discordgo.ApplicationCommandOptionString,
+					Required:    true,
+				},
+				{
+					Name:        "owner",  // Fixed the typo in 'permitted'
+					Description: "The user who owns the workspace",
+					Type:        discordgo.ApplicationCommandOptionUser,
+					Required:    true,
+				},
+				{
+					Name:        "github_username",  // Fixed the typo in 'permitted'
+					Description: "Used in order to authenticate requests to github",
+					Type:        discordgo.ApplicationCommandOptionString,
+					Required:    true,
+				},
+			},
 		},
 		{
 			Name:        "pull",
-            Description: "pull a repository and run the code from it",
-           
+			Description: "Pull a repository and run the code from it",
 		},
 		{
 			Name:        "project_create",
-            Description: "Creates a new project ",
-           
+			Description: "Creates a new project",
 		},
-
-}
+	}
 	
 	
 	if err != nil {
@@ -119,6 +169,7 @@ func main() {
 	bot.Identify.Intents = discordgo.IntentsAllWithoutPrivileged
 	err = bot.Open()
 	SlashCommandCreator(bot, commands)
+	// deleteAllGlobalCommands(bot)
 	bot.UpdateWatchStatus(0, "the servers")
 	if err != nil {
         log.Fatal("Error opening connection:", err)
@@ -141,7 +192,24 @@ func SlashCommandCreator(s *discordgo.Session, commands []*discordgo.Application
         }
     }
 }
+// func deleteAllGlobalCommands(s *discordgo.Session) error {
+// 	// Fetch all global commands
+// 	commands, err := s.ApplicationCommands(s.State.User.ID, "")
+// 	if err != nil {
+// 		return fmt.Errorf("failed to fetch commands: %w", err)
+// 	}
 
+// 	// Loop through each command and delete it
+// 	for _, command := range commands {
+// 		err := s.ApplicationCommandDelete(s.State.User.ID, "",command.ID)
+// 		if err != nil {
+// 			return fmt.Errorf("failed to delete command ID %s: %w", command.ID, err)
+// 		}
+// 		fmt.Printf("Global command ID %s deleted successfully.\n", command.ID)
+// 	}
+
+// 	return nil
+// }
 
 func CommandHandler(s *discordgo.Session, m *discordgo.InteractionCreate){
 	name := m.ApplicationCommandData().Name
@@ -161,14 +229,59 @@ func CommandHandler(s *discordgo.Session, m *discordgo.InteractionCreate){
 				},
             },
 		})
+	case "workspace_create":
+		
+		
+		s.InteractionRespond(m.Interaction, &discordgo.InteractionResponse{
+			
+			Type: discordgo.InteractionResponseChannelMessageWithSource,
+            Data: &discordgo.InteractionResponseData{
+                Embeds: []*discordgo.MessageEmbed{
+					{
+						Title: "Workspace inited successfully",
+						Description: ProcessManager.WorkSpaceCreate(ProcessManager.WorkSpace{
+							Name: m.ApplicationCommandData().Options[0].StringValue(),
+							Owner:m.ApplicationCommandData().Options[3].UserValue(s).Username,
+							Token:m.ApplicationCommandData().Options[2].StringValue(),
+							PermitedUsers: []ProcessManager.PermitedUser{
+								{
+									UserName: m.ApplicationCommandData().Options[1].UserValue(s).Username,
+									ID: m.ApplicationCommandData().Options[1].UserValue(s).ID,
+								},
+								{
+									UserName: "",
+									ID: "",
+
+									
+
+								},
+							},
+							GitHubUserName: m.ApplicationCommandData().Options[4].StringValue(),
+
+
+						
+
+						}),
+					},
+					
+
+				},
+            },
+		})
 	case "stop":
 		s.InteractionRespond(m.Interaction, &discordgo.InteractionResponse{
 			Type: discordgo.InteractionResponseChannelMessageWithSource,
             Data: &discordgo.InteractionResponseData{
                 Embeds: []*discordgo.MessageEmbed{
 					{
-						Title: "Process started ",
-						Description: "Process with XXXXXXXXXX ID launched",
+						Title: "Process stopped successfully",
+						Description: ProcessManager.Stop(ProcessManager.ProcessStop{
+							ProcessName: m.ApplicationCommandData().Options[0].StringValue(),
+							WorkSpace: m.ApplicationCommandData().Options[2].StringValue(),
+							Uuid: m.ApplicationCommandData().Options[1].StringValue(),
+
+
+						}),
 					},
 					
 
